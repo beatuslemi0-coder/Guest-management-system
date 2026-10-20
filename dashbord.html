@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usimamizi wa Guest House - Nginap</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <a class="sidebar-brand" href="#overview"><span class="brand-mark" data-brand-mark>N</span><span><span data-brand-name>nginap</span><small data-brand-category>GUEST HOUSE</small></span></a>
+                <div class="sidebar-controls">
+                    <button class="brand-edit-button" type="button" data-open-brand-dialog aria-label="Badilisha jina la guest house" title="Badilisha jina la guest house">✎</button>
+                    <label class="language-switcher"><span aria-hidden="true">◎</span><select data-language-switch aria-label="Chagua lugha"><option value="sw">Kiswahili</option><option value="en">English</option></select></label>
+                    <button id="menu-toggle" class="menu-toggle" type="button" aria-label="Fungua menyu" aria-controls="main-menu" aria-expanded="false">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+            <p class="menu-caption">MENYU KUU</p>
+            <nav id="main-menu" class="sidebar-menu" aria-label="Menyu kuu">
+                <a class="nav-link active" href="#overview" data-view="overview"><span>⌂</span> Muhtasari</a>
+                <a class="nav-link" href="#bookings" data-view="bookings"><span>▦</span> Booking</a>
+                <a class="nav-link" href="#rooms" data-view="rooms"><span>▤</span> Vyumba</a>
+                <a class="nav-link" href="#guests" data-view="guests"><span>♙</span> Wageni</a>
+                <a class="nav-link" href="#reports" data-view="reports"><span>▥</span> Ripoti</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <div class="sidebar-help"><span>✦</span><strong>Usimamizi rahisi,<br>ukarimu bora.</strong></div>
+                <button onclick="logout()" class="btn-logout"><span>↪</span> Toka kwenye mfumo</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-navbar">
+                <div class="mobile-brand"><span data-brand-name>nginap</span><span>.</span></div>
+                <div class="welcome-copy"><span id="greeting">Hujambo 👋</span><small>Huu hapa muhtasari wa guest house yako.</small></div>
+                <div class="user-profile"><div class="avatar">N</div><div class="user-info"><strong>Msimamizi</strong><small>Usimamizi</small></div></div>
+            </header>
+
+            <div id="dashboard-message" class="dashboard-message" role="status" aria-live="polite" hidden></div>
+
+            <section class="view-panel active" id="view-overview">
+                <div class="page-heading">
+                    <div><span class="eyebrow">DASHBOARD</span><h1>Muhtasari</h1><p>Angalia hali ya shughuli za guest house yako.</p></div>
+                    <button class="btn-create" type="button" data-action="new-booking"><span>＋</span> Booking mpya</button>
+                </div>
+                <div class="dashboard-summary">
+                    <article class="summary-card"><div class="stat-icon teal">▤</div><div><span>Vyumba vyote</span><strong id="room-count">—</strong></div><small id="room-stat-note">Vilivyosajiliwa</small></article>
+                    <article class="summary-card"><div class="stat-icon green">✓</div><div><span>Vyumba vilivyo wazi</span><strong id="available-count">—</strong></div><small>Viko tayari kupokea wageni</small></article>
+                    <article class="summary-card"><div class="stat-icon amber">▦</div><div><span>Booking zinazoendelea</span><strong id="booking-count">—</strong></div><small>Hazijafanyiwa checkout</small></article>
+                    <article class="summary-card"><div class="stat-icon violet">♙</div><div><span>Wageni waliosajiliwa</span><strong id="guest-count">—</strong></div><small>Jumla ya wageni</small></article>
+                </div>
+                <div class="section-heading"><div><h2>Booking za hivi karibuni</h2><p>Muhtasari wa nafasi zilizowekwa</p></div><button class="text-button" data-navigate="bookings">Tazama zote <span>→</span></button></div>
+                <div id="recent-bookings" class="data-card"></div>
+                <div class="section-heading room-heading"><div><h2>Vyumba</h2><p>Hali ya vyumba vyako kwa sasa</p></div><button class="text-button" data-navigate="rooms">Simamia vyumba <span>→</span></button></div>
+                <div id="overview-rooms" class="overview-room-grid"></div>
+            </section>
+
+            <section class="view-panel" id="view-bookings">
+                <div class="page-heading">
+                    <div><span class="eyebrow">USIMAMIZI</span><h1>Bookings</h1><p>Fuatilia nafasi na malazi ya wageni.</p></div>
+                    <button class="btn-create" data-action="new-booking"><span>＋</span> Booking mpya</button>
+                </div>
+                <div class="toolbar">
+                    <label class="search-control"><span>⌕</span><input class="search-input" data-search="bookings" type="search" placeholder="Tafuta mgeni au chumba..."></label>
+                    <select id="booking-status-filter" class="select-control" aria-label="Chuja booking kwa hali">
+                        <option value="">Hali zote</option><option>Confirmed</option><option>Checked-In</option><option>Completed</option><option>Cancelled</option>
+                    </select>
+                </div>
+                <div id="bookings-table" class="data-card table-card"></div>
+            </section>
+
+            <section class="view-panel" id="view-rooms">
+                <div class="page-heading">
+                    <div><span class="eyebrow">MALAZI</span><h1>Vyumba</h1><p>Ongeza vyumba na sasisha taarifa zake.</p></div>
+                    <button class="btn-create" data-action="new-room"><span>＋</span> Ongeza chumba</button>
+                </div>
+                <div class="toolbar">
+                    <label class="search-control"><span>⌕</span><input class="search-input" data-search="rooms" type="search" placeholder="Tafuta namba au aina ya chumba..."></label>
+                    <select id="room-status-filter" class="select-control" aria-label="Chuja vyumba kwa hali"><option value="">Vyumba vyote</option><option value="available">Vilivyo wazi</option><option value="occupied">Vilivyochukuliwa</option></select>
+                </div>
+                <div id="rooms-grid" class="rooms-grid"></div>
+            </section>
+
+            <section class="view-panel" id="view-guests">
+                <div class="page-heading">
+                    <div><span class="eyebrow">WATEJA</span><h1>Wageni</h1><p>Taarifa za wageni waliosajiliwa kwenye mfumo.</p></div>
+                    <button class="btn-create" data-action="new-guest"><span>＋</span> Sajili mgeni</button>
+                </div>
+                <div class="toolbar"><label class="search-control"><span>⌕</span><input class="search-input" data-search="guests" type="search" placeholder="Tafuta jina, simu au barua pepe..."></label></div>
+                <div id="guests-table" class="data-card table-card"></div>
+            </section>
+
+            <section class="view-panel" id="view-reports">
+                <div class="page-heading">
+                    <div><span class="eyebrow">UCHAMBUZI</span><h1>Ripoti</h1><p>Chunguza bookings kwa siku, wiki, mwezi au mwaka.</p></div>
+                    <button id="download-report" class="btn-create" type="button"><span>↓</span> Pakua PDF</button>
+                </div>
+                <div class="report-filters data-card">
+                    <label for="report-period">Kipindi cha ripoti</label>
+                    <select id="report-period" class="select-control">
+                        <option value="daily">Siku</option><option value="weekly">Wiki</option>
+                        <option value="monthly" selected>Mwezi</option><option value="yearly">Mwaka</option>
+                    </select>
+                    <label for="report-date">Chagua tarehe</label>
+                    <input id="report-date" class="select-control" type="date">
+                    <span id="report-range" class="report-range"></span>
+                </div>
+                <div id="report-message" class="dashboard-message report-message" role="status" aria-live="polite" hidden></div>
+                <div class="dashboard-summary report-summary">
+                    <article class="summary-card"><div class="stat-icon teal">▦</div><div><span>Jumla ya bookings</span><strong id="report-booking-count">—</strong></div><small>Kwa kipindi kilichochaguliwa</small></article>
+                    <article class="summary-card"><div class="stat-icon violet">♙</div><div><span>Wageni tofauti</span><strong id="report-guest-count">—</strong></div><small>Waliofanya booking</small></article>
+                    <article class="summary-card"><div class="stat-icon green">↗</div><div><span>Thamani ya booking zisizoghairiwa</span><strong id="report-value">—</strong></div><small>Thamani ya nafasi, si malipo yaliyothibitishwa</small></article>
+                    <article class="summary-card"><div class="stat-icon amber">✓</div><div><span>Booking zilizokamilika</span><strong id="report-completed-count">—</strong></div><small>Checkout imefanyika</small></article>
+                </div>
+                <section class="report-chart-card data-card">
+                    <div class="section-heading"><div><h2>Shughuli kwa kipindi</h2><p>Idadi ya booking katika kila siku au mwezi</p></div><span class="chart-legend"><i></i> Bookings</span></div>
+                    <div id="report-chart" class="report-chart" aria-label="Chati ya bookings"></div>
+                </section>
+                <div class="section-heading"><div><h2>Bookings za kipindi</h2><p>Rekodi zote zinazoingia kwenye tarehe ulizochagua.</p></div></div>
+                <div id="report-bookings" class="data-card table-card"></div>
+            </section>
+
+            <footer class="app-footer"><span>nginap.</span> Mfumo wa usimamizi wa malazi <span id="footer-date"></span></footer>
+        </main>
+    </div>
+
+    <dialog id="record-dialog" class="booking-dialog">
+        <form id="record-form">
+            <div class="dialog-heading"><div><span id="dialog-eyebrow" class="eyebrow">TAARIFA</span><h2 id="dialog-title">Ongeza taarifa</h2><p id="dialog-description"></p></div><button class="dialog-close" type="button" data-close-dialog aria-label="Funga">×</button></div>
+            <div id="dialog-fields" class="form-grid"></div>
+            <p id="form-message" class="msg" role="alert"></p>
+            <div class="dialog-actions"><button class="filter-btn" type="button" data-close-dialog>Ghairi</button><button id="form-submit" class="btn-create" type="submit">Hifadhi</button></div>
+        </form>
+    </dialog>
+    <dialog id="detail-dialog" class="booking-dialog detail-dialog">
+        <div class="dialog-heading"><div><span class="eyebrow">TAARIFA ZA KINA</span><h2 id="detail-title">Taarifa</h2></div><button class="dialog-close" type="button" data-close-detail aria-label="Funga">×</button></div>
+        <div id="detail-content" class="detail-grid"></div>
+        <div class="dialog-actions"><button class="btn-create" type="button" data-close-detail>Funga</button></div>
+    </dialog>
+
+    <script src="brand.js"></script>
+    <script src="i18n.js"></script>
+    <script src="api.js"></script>
+    <script>
+        if (!localStorage.getItem('token')) window.location.replace('index.html');
+
+        const state = { rooms: [], bookings: [], guests: [] };
+        const dialog = document.getElementById('record-dialog');
+        const recordForm = document.getElementById('record-form');
+        const messageBox = document.getElementById('dashboard-message');
+        let currentReport = null;
+        let reportRequestId = 0;
+        let formMode = '';
+        let editingId = null;
+        let busy = false;
+
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[char]);
+        const money = (value) => Number(value || 0).toLocaleString(window.getAppLanguage() === 'en' ? 'en-TZ' : 'sw-TZ');
+        const date = (value) => new Date(value).toLocaleDateString(window.getAppLanguage() === 'en' ? 'en-TZ' : 'sw-TZ', { day: 'numeric', month: 'short', year: 'numeric' });
+        const roomFor = (id) => state.rooms.find((room) => room.id === id);
+        const guestFor = (booking) => booking.customer || state.guests.find((guest) => guest.id === booking.customer_id);
+        const activeBooking = (booking) => !['Completed', 'Cancelled'].includes(booking.status);
+
+        function notify(message, isError = false) {
+            messageBox.textContent = message;
+            messageBox.classList.toggle('error', isError);
+            messageBox.hidden = !message;
+            if (message && !isError) window.setTimeout(() => { messageBox.hidden = true; }, 4500);
+        }
+
+        function showView(name) {
+            document.querySelectorAll('.view-panel').forEach((panel) => panel.classList.toggle('active', panel.id === `view-${name}`));
+            document.querySelectorAll('.nav-link').forEach((link) => link.classList.toggle('active', link.dataset.view === name));
+            if (location.hash !== `#${name}`) history.replaceState(null, '', `#${name}`);
+            closeMobileMenu();
+        }
+
+        const sidebar = document.querySelector('.sidebar');
+        const menuToggle = document.getElementById('menu-toggle');
+
+        function closeMobileMenu() {
+            sidebar.classList.remove('menu-open');
+            menuToggle.setAttribute('aria-expanded', 'false');
+            menuToggle.setAttribute('aria-label', window.getAppLanguage() === 'en' ? 'Open menu' : 'Fungua menyu');
+        }
+
+        menuToggle.addEventListener('click', () => {
+            const isOpen = sidebar.classList.toggle('menu-open');
+            menuToggle.setAttribute('aria-expanded', String(isOpen));
+            menuToggle.setAttribute('aria-label', window.getAppLanguage() === 'en'
+                ? (isOpen ? 'Close menu' : 'Open menu')
+                : (isOpen ? 'Funga menyu' : 'Fungua menyu'));
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeMobileMenu();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!sidebar.contains(event.target)) closeMobileMenu();
+        });
+
+        function tableMarkup(headers, rows, empty) {
+            if (!rows.length) return `<div class="empty-state"><span>⌕</span><strong>${empty}</strong></div>`;
+            return `<div class="table-scroll"><table><thead><tr>${headers.map((item) => `<th>${item}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+        }
+
+        function statusBadge(status) {
+            const classes = { Confirmed: 'badge-blue', 'Checked-In': 'badge-green', Completed: 'badge-gray', Cancelled: 'badge-red' };
+            const labels = { Confirmed: 'Imethibitishwa', 'Checked-In': 'Mgeni ameingia', Completed: 'Imekamilika', Cancelled: 'Imeghairiwa' };
+            return `<span class="status-badge ${classes[status] || 'badge-gray'}"><i></i>${labels[status] || escapeHtml(status)}</span>`;
+        }
+
+        function renderOverview() {
+            document.getElementById('room-count').textContent = state.rooms.length;
+            document.getElementById('available-count').textContent = state.rooms.filter((room) => room.is_available).length;
+            document.getElementById('booking-count').textContent = state.bookings.filter(activeBooking).length;
+            document.getElementById('guest-count').textContent = state.guests.length;
+            const recent = [...state.bookings].sort((a, b) => new Date(b.check_in_date) - new Date(a.check_in_date)).slice(0, 5);
+            document.getElementById('recent-bookings').innerHTML = tableMarkup(
+                ['MGENI', 'CHUMBA', 'TAREHE', 'JUMLA', 'HALI'],
+                recent.map((booking) => {
+                    const guest = guestFor(booking);
+                    const room = roomFor(booking.room_id);
+                    return `<tr><td><span class="person-cell"><span class="table-avatar">${escapeHtml((guest?.full_name || 'M')[0].toUpperCase())}</span><span><strong>${escapeHtml(guest?.full_name || 'Mgeni')}</strong><small>${escapeHtml(guest?.phone_number || '')}</small></span></span></td><td>${escapeHtml(room?.room_number || '—')}</td><td>${date(booking.check_in_date)} – ${date(booking.check_out_date)}</td><td>${money(booking.total_price)}</td><td>${statusBadge(booking.status)}</td></tr>`;
+                }), 'Bado hakuna booking zilizosajiliwa.'
+            );
+            const list = state.rooms.slice(0, 4);
+            document.getElementById('overview-rooms').innerHTML = list.length ? list.map((room) => `
+                <article class="overview-room-card"><div class="room-art">⌂</div><div class="room-card-copy"><span class="room-type">${escapeHtml(room.room_type)}</span><h3>Chumba ${escapeHtml(room.room_number)}</h3><p>${money(room.price_per_night)} <small>/ usiku</small></p><span class="availability-pill ${room.is_available ? 'is-open' : 'is-busy'}"><i></i>${room.is_available ? 'Kipo wazi' : 'Kimechukuliwa'}</span></div></article>
+            `).join('') : '<div class="empty-state"><strong>Hakuna vyumba vilivyosajiliwa bado.</strong></div>';
+        }
+
+        function renderBookings() {
+            const query = document.querySelector('[data-search="bookings"]').value.trim().toLocaleLowerCase();
+            const status = document.getElementById('booking-status-filter').value;
+            const filtered = state.bookings.filter((booking) => {
+                const guest = guestFor(booking);
+                const room = roomFor(booking.room_id);
+                return (!status || booking.status === status) && (!query ||
+                    (guest?.full_name || '').toLocaleLowerCase().includes(query) ||
+                    (room?.room_number || '').toLocaleLowerCase().includes(query));
+            }).sort((a, b) => new Date(b.check_in_date) - new Date(a.check_in_date));
+            document.getElementById('bookings-table').innerHTML = tableMarkup(
+                ['MGENI', 'CHUMBA', 'KUINGIA / KUTOKA', 'JUMLA', 'HALI', 'KITENDO'],
+                filtered.map((booking) => {
+                    const guest = guestFor(booking);
+                    const room = roomFor(booking.room_id);
+                    return `<tr><td><span class="person-cell"><span class="table-avatar">${escapeHtml((guest?.full_name || 'M')[0].toUpperCase())}</span><span><strong>${escapeHtml(guest?.full_name || 'Mgeni')}</strong><small>${escapeHtml(guest?.phone_number || '')}</small></span></span></td><td>${escapeHtml(room?.room_number || '—')}<small class="cell-subtitle">${escapeHtml(room?.room_type || '')}</small></td><td>${date(booking.check_in_date)}<small class="cell-subtitle">hadi ${date(booking.check_out_date)}</small></td><td>${money(booking.total_price)}</td><td>${statusBadge(booking.status)}</td><td>${activeBooking(booking) ? `<button class="action-button" data-checkout="${booking.id}">Checkout</button>` : '<span class="muted">—</span>'}</td></tr>`;
+                }), 'Hakuna booking inayolingana na utafutaji.'
+            );
+        }
+
+        function renderRooms() {
+            const query = document.querySelector('[data-search="rooms"]').value.trim().toLocaleLowerCase();
+            const filter = document.getElementById('room-status-filter').value;
+            const rooms = state.rooms.filter((room) =>
+                (!filter || (filter === 'available' ? room.is_available : !room.is_available)) &&
+                (!query || room.room_number.toLocaleLowerCase().includes(query) || room.room_type.toLocaleLowerCase().includes(query))
+            );
+            document.getElementById('rooms-grid').innerHTML = rooms.length ? rooms.map((room) => `
+                <article class="managed-room-card"><div class="room-art large">⌂<span class="room-number-tag">#${escapeHtml(room.room_number)}</span></div><div class="managed-room-body"><div class="room-title-line"><div><span class="room-type">${escapeHtml(room.room_type)}</span><h3>Chumba ${escapeHtml(room.room_number)}</h3></div><button class="icon-button" aria-label="Angalia chumba" data-view-room="${room.id}">⌕</button><button class="icon-button" aria-label="Hariri chumba" data-edit-room="${room.id}">✎</button></div><p class="room-description">${escapeHtml(room.description || 'Chumba cha wageni')}</p><div class="room-bottom-line"><span class="room-price">${money(room.price_per_night)} <small>/ usiku</small></span><span class="availability-pill ${room.is_available ? 'is-open' : 'is-busy'}"><i></i>${room.is_available ? 'Kipo wazi' : 'Kimechukuliwa'}</span></div><button class="delete-link" data-delete-room="${room.id}" ${state.bookings.some((booking) => booking.room_id === room.id) ? 'disabled title="Chumba kina historia ya booking"' : ''}>Futa chumba</button></div></article>
+            `).join('') : '<div class="empty-state"><strong>Hakuna chumba kinacholingana na utafutaji.</strong></div>';
+        }
+
+        function renderGuests() {
+            const query = document.querySelector('[data-search="guests"]').value.trim().toLocaleLowerCase();
+            const guests = state.guests.filter((guest) => [guest.full_name, guest.phone_number, guest.email, guest.id_number].some((value) => (value || '').toLocaleLowerCase().includes(query)));
+            document.getElementById('guests-table').innerHTML = tableMarkup(
+                ['MGENI', 'SIMU', 'BARUA PEPE', 'KITAMBULISHO', 'ANAKOTOKA', 'KITENDO'],
+                guests.map((guest) => `<tr><td><span class="person-cell"><span class="table-avatar">${escapeHtml(guest.full_name[0].toUpperCase())}</span><span><strong>${escapeHtml(guest.full_name)}</strong><small>Mgeni #${guest.id}</small></span></span></td><td>${escapeHtml(guest.phone_number)}</td><td>${escapeHtml(guest.email || '—')}</td><td>${escapeHtml(guest.id_number || '—')}</td><td>${escapeHtml(guest.origin || '—')}</td><td><button class="icon-button" aria-label="Angalia mgeni" data-view-guest="${guest.id}">⌕</button> <button class="icon-button" aria-label="Hariri mgeni" data-edit-guest="${guest.id}">✎</button> <button class="delete-link" data-delete-guest="${guest.id}" ${state.bookings.some((booking) => booking.customer_id === guest.id) ? 'disabled title="Mgeni ana historia ya booking"' : ''}>Futa</button></td></tr>`),
+                'Bado hakuna wageni waliosajiliwa.'
+            );
+        }
+
+        function reportPeriodName(period) {
+            return {
+                daily: window.getAppLanguage() === 'en' ? 'Day' : 'Siku',
+                weekly: window.getAppLanguage() === 'en' ? 'Week' : 'Wiki',
+                monthly: window.getAppLanguage() === 'en' ? 'Month' : 'Mwezi',
+                yearly: window.getAppLanguage() === 'en' ? 'Year' : 'Mwaka'
+            }[period];
+        }
+
+        function renderReport(report) {
+            currentReport = report;
+            const summary = report.summary;
+            document.getElementById('report-range').textContent =
+                `${reportPeriodName(report.period)}: ${date(report.date_from)} – ${date(report.date_to)}`;
+            document.getElementById('report-booking-count').textContent = summary.booking_count;
+            document.getElementById('report-guest-count').textContent = summary.guest_count;
+            document.getElementById('report-value').textContent = money(summary.booking_value);
+            document.getElementById('report-completed-count').textContent = summary.completed_count;
+
+            const maxCount = Math.max(...report.series.map((point) => point.booking_count), 1);
+            document.getElementById('report-chart').innerHTML = report.series.map((point) => {
+                const height = point.booking_count ? Math.max(5, Math.round(point.booking_count / maxCount * 100)) : 2;
+                const label = report.period === 'yearly'
+                    ? new Date(`${point.label}-01T00:00:00`).toLocaleDateString(window.getAppLanguage() === 'en' ? 'en-TZ' : 'sw-TZ', { month: 'short' })
+                    : report.period === 'daily'
+                        ? (window.getAppLanguage() === 'en' ? 'Day' : 'Siku')
+                        : new Date(`${point.label}T00:00:00`).toLocaleDateString(window.getAppLanguage() === 'en' ? 'en-TZ' : 'sw-TZ', { day: 'numeric' });
+                return `<div class="chart-column" title="${escapeHtml(point.label)}: ${point.booking_count} booking, thamani ${money(point.booking_value)}"><strong>${point.booking_count || ''}</strong><div class="chart-track"><span style="height:${height}%"></span></div><small>${escapeHtml(label)}</small></div>`;
+            }).join('');
+
+            document.getElementById('report-bookings').innerHTML = tableMarkup(
+                ['TAREHE YA KUINGIA', 'MGENI', 'SIMU', 'CHUMBA', 'HALI', 'THAMANI'],
+                report.bookings.map((booking) => `<tr><td>${date(booking.check_in_date)}<small class="cell-subtitle">Hadi ${date(booking.check_out_date)}</small></td><td><strong>${escapeHtml(booking.guest_name)}</strong></td><td>${escapeHtml(booking.guest_phone)}</td><td>${escapeHtml(booking.room_number)}<small class="cell-subtitle">${escapeHtml(booking.room_type)}</small></td><td>${statusBadge(booking.status)}</td><td>${money(booking.total_price)}</td></tr>`),
+                'Hakuna booking katika kipindi hiki.'
+            );
+        }
+
+        async function loadReport() {
+            const requestId = ++reportRequestId;
+            const period = document.getElementById('report-period').value;
+            const referenceDate = document.getElementById('report-date').value;
+            const message = document.getElementById('report-message');
+            currentReport = null;
+            document.getElementById('download-report').disabled = true;
+            message.hidden = true;
+            document.getElementById('report-bookings').innerHTML = '<div class="empty-state"><strong>Inapakia ripoti...</strong></div>';
+            try {
+                const report = await apiRequest(`/reports/?period=${encodeURIComponent(period)}&reference_date=${encodeURIComponent(referenceDate)}`);
+                if (requestId === reportRequestId) {
+                    renderReport(report);
+                    document.getElementById('download-report').disabled = false;
+                }
+            } catch (error) {
+                if (requestId !== reportRequestId) return;
+                message.textContent = error.message;
+                message.classList.add('error');
+                message.hidden = false;
+                document.getElementById('download-report').disabled = true;
+                document.getElementById('report-bookings').innerHTML = '<div class="empty-state"><strong>Imeshindikana kupakia ripoti.</strong></div>';
+            }
+        }
+
+        function renderAll() {
+            renderOverview();
+            renderBookings();
+            renderRooms();
+            renderGuests();
+        }
+
+        async function loadData() {
+            try {
+                const [rooms, bookings, guests] = await Promise.all([
+                    apiRequest('/rooms/?limit=100'),
+                    apiRequest('/bookings/?limit=100'),
+                    apiRequest('/customers/?limit=100')
+                ]);
+                state.rooms = rooms;
+                state.bookings = bookings;
+                state.guests = guests;
+                renderAll();
+                if (document.getElementById('view-reports').classList.contains('active')) loadReport();
+            } catch (error) {
+                notify(error.message, true);
+                document.querySelectorAll('.data-card').forEach((element) => {
+                    if (!element.innerHTML.trim()) element.innerHTML = '<div class="empty-state"><strong>Imeshindikana kupakia taarifa.</strong></div>';
+                });
+            }
+        }
+
+        const field = (name, label, type = 'text', value = '', required = false, options = null) => {
+            const id = `field-${name}`;
+            const attr = required ? 'required' : '';
+            const control = options
+                ? `<select id="${id}" name="${name}" ${attr}>${options.map((item) => `<option value="${escapeHtml(item.value)}" ${String(item.value) === String(value) ? 'selected' : ''}>${escapeHtml(item.label)}</option>`).join('')}</select>`
+                : `<input id="${id}" name="${name}" type="${type}" value="${escapeHtml(value)}" ${attr} ${type === 'number' ? 'min="0" step="0.01"' : ''}>`;
+            return `<div class="input-group"><label for="${id}">${label}</label>${control}</div>`;
+        };
+
+        function openForm(mode, record = null) {
+            formMode = mode;
+            editingId = record?.id ?? null;
+            const fields = document.getElementById('dialog-fields');
+            const title = document.getElementById('dialog-title');
+            const description = document.getElementById('dialog-description');
+            document.getElementById('form-message').textContent = '';
+            recordForm.reset();
+            if (mode === 'room') {
+                title.textContent = record ? 'Hariri chumba' : 'Ongeza chumba';
+                description.textContent = 'Jaza taarifa za chumba na bei ya malazi.';
+                fields.innerHTML = field('room_number', 'Namba ya chumba', 'text', record?.room_number || '', true)
+                    + field('room_type', 'Aina ya chumba', 'text', record?.room_type || '', true)
+                    + field('price_per_night', 'Bei kwa usiku', 'number', record?.price_per_night ?? '', true)
+                    + field('description', 'Maelezo', 'text', record?.description || '')
+                    + (record ? field('is_available', 'Hali ya upatikanaji', 'select', String(record.is_available), false, [{ value: 'true', label: 'Kipo wazi' }, { value: 'false', label: 'Kimechukuliwa' }]) : '');
+            } else if (mode === 'guest') {
+                title.textContent = record ? 'Hariri taarifa za mgeni' : 'Sajili mgeni';
+                description.textContent = 'Weka taarifa za mawasiliano ya mgeni.';
+                fields.innerHTML = field('full_name', 'Jina kamili', 'text', record?.full_name || '', true)
+                    + field('phone_number', 'Namba ya simu', 'tel', record?.phone_number || '', true)
+                    + field('email', 'Barua pepe', 'email', record?.email || '')
+                    + field('id_number', 'Namba ya kitambulisho', 'text', record?.id_number || '')
+                    + field('origin', 'Anakotoka', 'text', record?.origin || '')
+                    + field('destination', 'Anakoelekea', 'text', record?.destination || '')
+                    + field('occupation', 'Kazi', 'text', record?.occupation || '');
+            } else if (mode === 'booking') {
+                title.textContent = 'Booking mpya';
+                description.textContent = 'Chagua mgeni, chumba na tarehe za kukaa.';
+                const openRooms = state.rooms.filter((room) => room.is_available);
+                fields.innerHTML = field('customer_id', 'Mgeni', 'select', '', true, state.guests.map((guest) => ({ value: guest.id, label: `${guest.full_name} · ${guest.phone_number}` })))
+                    + field('room_id', 'Chumba', 'select', '', true, openRooms.map((room) => ({ value: room.id, label: `${room.room_number} · ${room.room_type} · ${money(room.price_per_night)} / usiku` })))
+                    + field('check_in_date', 'Tarehe ya kuingia', 'date', '', true)
+                    + field('check_out_date', 'Tarehe ya kutoka', 'date', '', true);
+                if (!state.guests.length) document.getElementById('form-message').textContent = 'Sajili mgeni kwanza kabla ya kutengeneza booking.';
+                if (!openRooms.length) document.getElementById('form-message').textContent = 'Hakuna chumba kilicho wazi kwa sasa.';
+            }
+            document.getElementById('form-submit').textContent = mode === 'booking' ? 'Hifadhi booking' : 'Hifadhi taarifa';
+            dialog.showModal();
+            const checkIn = document.getElementById('field-check_in_date');
+            const checkOut = document.getElementById('field-check_out_date');
+            if (checkIn && checkOut) {
+                const today = new Date();
+                const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+                checkIn.min = localToday;
+                checkIn.addEventListener('change', () => { checkOut.min = checkIn.value; });
+            }
+        }
+
+        async function submitForm(event) {
+            event.preventDefault();
+            const data = Object.fromEntries(new FormData(recordForm));
+            const error = document.getElementById('form-message');
+            if (busy) return;
+            if (formMode === 'booking' && data.check_out_date <= data.check_in_date) {
+                error.textContent = 'Tarehe ya kutoka lazima iwe baada ya tarehe ya kuingia.';
+                return;
+            }
+            let path;
+            let method;
+            if (formMode === 'room') {
+                path = `/rooms/${editingId || ''}`;
+                method = editingId ? 'PUT' : 'POST';
+                data.price_per_night = Number(data.price_per_night);
+                if (editingId) data.is_available = data.is_available === 'true';
+            } else if (formMode === 'guest') {
+                path = `/customers/${editingId || ''}`;
+                method = editingId ? 'PUT' : 'POST';
+                for (const key of ['email', 'id_number', 'origin', 'destination', 'occupation']) data[key] = data[key] || null;
+            } else {
+                path = '/bookings/';
+                method = 'POST';
+                data.room_id = Number(data.room_id);
+                data.customer_id = Number(data.customer_id);
+                data.check_in_date += 'T12:00:00';
+                data.check_out_date += 'T12:00:00';
+            }
+            busy = true;
+            const submit = document.getElementById('form-submit');
+            submit.disabled = true;
+            submit.textContent = 'Inahifadhi...';
+            try {
+                await apiRequest(path, { method, body: JSON.stringify(data) });
+                dialog.close();
+                notify(formMode === 'booking' ? 'Booking imehifadhiwa kikamilifu.' : 'Taarifa zimehifadhiwa kikamilifu.');
+                await loadData();
+            } catch (requestError) {
+                error.textContent = requestError.message;
+            } finally {
+                busy = false;
+                submit.disabled = false;
+                submit.textContent = formMode === 'booking' ? 'Hifadhi booking' : 'Hifadhi taarifa';
+            }
+        }
+
+        async function deleteRecord(kind, id) {
+            const isRoom = kind === 'room';
+            const record = (isRoom ? state.rooms : state.guests).find((item) => item.id === id);
+            const hasBookings = state.bookings.some((booking) => isRoom
+                ? booking.room_id === id
+                : booking.customer_id === id);
+            if (hasBookings) {
+                notify('Rekodi yenye historia ya booking haiwezi kufutwa.', true);
+                return;
+            }
+            const label = isRoom ? `chumba ${record?.room_number}` : `mgeni ${record?.full_name}`;
+            if (!window.confirm(`Una uhakika unataka kufuta ${label}?`)) return;
+            try {
+                await apiRequest(`/${isRoom ? 'rooms' : 'customers'}/${id}`, { method: 'DELETE' });
+                notify(`${isRoom ? 'Chumba' : 'Mgeni'} amefutwa.`);
+                await loadData();
+            } catch (error) {
+                notify(error.message, true);
+            }
+        }
+
+        async function checkout(id) {
+            if (!window.confirm('Unathibitisha kufanya checkout ya booking hii?')) return;
+            try {
+                await apiRequest(`/bookings/${id}/checkout`, { method: 'POST' });
+                notify('Checkout imekamilika. Chumba sasa kipo wazi.');
+                await loadData();
+            } catch (error) {
+                notify(error.message, true);
+            }
+
+            async function viewRecord(kind, id) {
+                const isRoom = kind === 'room';
+                try {
+                    const record = await apiRequest(`/${isRoom ? 'rooms' : 'customers'}/${id}`);
+                    const labels = isRoom
+                        ? { room_number: 'Namba ya chumba', room_type: 'Aina ya chumba', price_per_night: 'Bei kwa usiku', is_available: 'Hali', description: 'Maelezo' }
+                        : { full_name: 'Jina kamili', phone_number: 'Namba ya simu', email: 'Barua pepe', id_number: 'Kitambulisho', origin: 'Anakotoka', destination: 'Anakoelekea', occupation: 'Kazi' };
+                    document.getElementById('detail-title').textContent = isRoom ? `Chumba ${record.room_number}` : record.full_name;
+                    document.getElementById('detail-content').innerHTML = Object.entries(labels).map(([key, label]) => {
+                        let value = record[key];
+                        if (key === 'is_available') value = value ? 'Kipo wazi' : 'Kimechukuliwa';
+                        if (key === 'price_per_night') value = `${money(value)} kwa usiku`;
+                        return `<div class="detail-item"><span>${label}</span><strong>${escapeHtml(value || 'Haijawekwa')}</strong></div>`;
+                    }).join('');
+                    document.getElementById('detail-dialog').showModal();
+                } catch (error) {
+                    notify(error.message, true);
+                }
+            }
+        }
+
+        document.querySelectorAll('.nav-link').forEach((link) => link.addEventListener('click', () => {
+            showView(link.dataset.view);
+            if (link.dataset.view === 'reports') loadReport();
+        }));
+        document.querySelectorAll('[data-navigate]').forEach((button) => button.addEventListener('click', () => {
+            showView(button.dataset.navigate);
+            if (button.dataset.navigate === 'reports') loadReport();
+        }));
+        document.querySelectorAll('[data-action]').forEach((button) => button.addEventListener('click', () => {
+            const action = button.dataset.action;
+            if (action === 'new-room') openForm('room');
+            if (action === 'new-guest') openForm('guest');
+            if (action === 'new-booking') openForm('booking');
+        }));
+        document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => dialog.close()));
+        document.querySelectorAll('[data-close-detail]').forEach((button) => button.addEventListener('click', () => document.getElementById('detail-dialog').close()));
+        document.querySelectorAll('.search-input').forEach((input) => input.addEventListener('input', () => {
+            if (input.dataset.search === 'rooms') renderRooms();
+            if (input.dataset.search === 'guests') renderGuests();
+            if (input.dataset.search === 'bookings') renderBookings();
+        }));
+        document.getElementById('booking-status-filter').addEventListener('change', renderBookings);
+        document.getElementById('room-status-filter').addEventListener('change', renderRooms);
+        document.getElementById('report-period').addEventListener('change', loadReport);
+        document.getElementById('report-date').addEventListener('change', loadReport);
+        document.querySelector('[data-language-switch]').addEventListener('change', (event) => {
+            window.setAppLanguage(event.target.value);
+            renderAll();
+            if (currentReport) renderReport(currentReport);
+            document.getElementById('footer-date').textContent = new Date().toLocaleDateString(window.getAppLanguage() === 'en' ? 'en-TZ' : 'sw-TZ', { day: 'numeric', month: 'long', year: 'numeric' });
+        });
+        document.getElementById('download-report').addEventListener('click', async () => {
+            if (!currentReport) {
+                notify('Chagua kipindi na subiri ripoti ipakie kabla ya kupakua.', true);
+                return;
+            }
+            const period = document.getElementById('report-period').value;
+            const referenceDate = document.getElementById('report-date').value;
+            const button = document.getElementById('download-report');
+            button.disabled = true;
+            button.textContent = 'Inatengeneza PDF...';
+            try {
+                const filename = `nginap-ripoti-${period}-${currentReport.date_from}.pdf`;
+                await apiDownload(`/reports/pdf?period=${encodeURIComponent(period)}&reference_date=${encodeURIComponent(referenceDate)}&language=${encodeURIComponent(window.getAppLanguage())}`, filename);
+            } catch (error) {
+                notify(error.message, true);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<span>↓</span> Pakua PDF';
+            }
+        });
+        recordForm.addEventListener('submit', submitForm);
+        document.addEventListener('click', (event) => {
+            const target = event.target.closest('button');
+            if (!target) return;
+            if (target.dataset.checkout) checkout(Number(target.dataset.checkout));
+            if (target.dataset.viewRoom) viewRecord('room', Number(target.dataset.viewRoom));
+            if (target.dataset.viewGuest) viewRecord('guest', Number(target.dataset.viewGuest));
+            if (target.dataset.editRoom) openForm('room', state.rooms.find((room) => room.id === Number(target.dataset.editRoom)));
+            if (target.dataset.editGuest) openForm('guest', state.guests.find((guest) => guest.id === Number(target.dataset.editGuest)));
+            if (target.dataset.deleteRoom) deleteRecord('room', Number(target.dataset.deleteRoom));
+            if (target.dataset.deleteGuest) deleteRecord('guest', Number(target.dataset.deleteGuest));
+        });
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+        window.logout = logout;
+        const hour = new Date().getHours();
+        document.getElementById('greeting').textContent = `${hour < 12 ? 'Habari za asubuhi' : hour < 18 ? 'Habari za mchana' : 'Habari za jioni'} 👋`;
+        document.getElementById('footer-date').textContent = new Date().toLocaleDateString(window.getAppLanguage() === 'en' ? 'en-TZ' : 'sw-TZ', { day: 'numeric', month: 'long', year: 'numeric' });
+        const initialView = location.hash.slice(1);
+        const allowedViews = ['overview', 'bookings', 'rooms', 'guests', 'reports'];
+        const selectedView = allowedViews.includes(initialView) ? initialView : 'overview';
+        showView(selectedView);
+        const localToday = new Date();
+        document.getElementById('report-date').value = new Date(localToday.getTime() - localToday.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        loadData();
+        if (selectedView === 'reports') loadReport();
+    </script>
+</body>
+</html>

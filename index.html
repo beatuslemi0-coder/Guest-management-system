@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingia - Nginap Guest House</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-language">
+            <label class="language-switcher"><span aria-hidden="true">◎</span><select data-language-switch aria-label="Chagua lugha"><option value="sw">Kiswahili</option><option value="en">English</option></select></label>
+        </div>
+        <div class="auth-card">
+            <div class="brand-logo">
+                <div class="brand-heading"><h2><span data-brand-name>nginap</span><span>.</span></h2><button class="brand-edit-button" type="button" data-open-brand-dialog aria-label="Badilisha jina la guest house" title="Badilisha jina la guest house">✎</button></div>
+                <p>Karibu tena! Tafadhali ingiza taarifa zako.</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="input-group">
+                    <label>Barua Pepe (Email)</label>
+                    <input type="email" id="login-email" placeholder="mteja@example.com" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Nenosiri (Password)</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button id="forgot-password-link" class="auth-link-button" type="button">Umesahau nenosiri?</button>
+                
+                <button type="submit" class="btn-primary">Ingia Kwenye Mfumo</button>
+            </form>
+
+            <form id="forgot-password-form" hidden>
+                <div class="input-group">
+                    <label for="forgot-email">Barua pepe ya akaunti</label>
+                    <input type="email" id="forgot-email" required>
+                </div>
+                <button type="submit" class="btn-primary">Tengeneza token ya kubadilisha nenosiri</button>
+                <button id="back-to-login" class="auth-link-button" type="button">Rudi kwenye kuingia</button>
+            </form>
+
+            <form id="reset-password-form" hidden>
+                <div class="input-group">
+                    <label for="reset-token">Token ya kubadilisha nenosiri</label>
+                    <input type="text" id="reset-token" required>
+                </div>
+                <div class="input-group">
+                    <label for="new-password">Nenosiri jipya</label>
+                    <input type="password" id="new-password" minlength="8" required>
+                </div>
+                <button type="submit" class="btn-primary">Badilisha nenosiri</button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Huna akaunti bado? <a href="register.html">Jisajili hapa</a></p>
+            </div>
+            <div id="message" class="msg"></div>
+        </div>
+    </div>
+
+    <script src="brand.js"></script>
+    <script src="i18n.js"></script>
+    <script src="api.js"></script>
+    <script>
+        const loginForm = document.getElementById('login-form');
+        const forgotForm = document.getElementById('forgot-password-form');
+        const resetForm = document.getElementById('reset-password-form');
+        const authMessage = document.getElementById('message');
+
+        document.getElementById('forgot-password-link').addEventListener('click', () => {
+            loginForm.hidden = true;
+            forgotForm.hidden = false;
+            authMessage.textContent = '';
+        });
+        document.getElementById('back-to-login').addEventListener('click', () => {
+            forgotForm.hidden = true;
+            resetForm.hidden = true;
+            loginForm.hidden = false;
+            authMessage.textContent = '';
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            const formData = new URLSearchParams();
+            formData.append('username', email);
+            formData.append('password', password);
+
+            try {
+                const data = await apiRequest('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                localStorage.setItem('token', data.access_token);
+                window.location.href = 'dashbord.html';
+            } catch (error) {
+                authMessage.innerText = error.message;
+            }
+        });
+
+        forgotForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            authMessage.textContent = '';
+            try {
+                const result = await apiRequest('/auth/forgot-password', {
+                    method: 'POST',
+                    body: JSON.stringify({ email: document.getElementById('forgot-email').value })
+                });
+                forgotForm.hidden = true;
+                resetForm.hidden = false;
+                if (result.reset_token_kwa_majaribio) {
+                    document.getElementById('reset-token').value = result.reset_token_kwa_majaribio;
+                    authMessage.textContent = 'Token ya majaribio imejazwa. Weka nenosiri jipya hapa chini.';
+                    authMessage.classList.add('success-message');
+                } else {
+                    authMessage.textContent = result.message;
+                    authMessage.classList.remove('success-message');
+                }
+            } catch (error) {
+                authMessage.textContent = error.message;
+            }
+        });
+
+        resetForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            authMessage.textContent = '';
+            try {
+                const result = await apiRequest('/auth/reset-password', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        token: document.getElementById('reset-token').value.trim(),
+                        new_password: document.getElementById('new-password').value
+                    })
+                });
+                authMessage.textContent = `${result.message} Unaweza kuingia sasa.`;
+                authMessage.classList.add('success-message');
+                resetForm.hidden = true;
+                loginForm.hidden = false;
+            } catch (error) {
+                authMessage.textContent = error.message;
+                authMessage.classList.remove('success-message');
+            }
+        });
+    </script>
+</body>
+</html>
