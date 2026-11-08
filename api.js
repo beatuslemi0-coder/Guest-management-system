@@ -1,4 +1,4 @@
-const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+const API_BASE_URL = window.API_BASE_URL || 'https://guest-management-system-4.onrender.com/api/v1';
 
 async function apiRequest(path, options = {}) {
     const headers = new Headers(options.headers || {});
