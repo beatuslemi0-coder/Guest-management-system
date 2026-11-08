@@ -15,6 +15,7 @@ class UserRepository:
         db_user = User(
             email=user_in.email,
             full_name=user_in.full_name,
+            guesthouse_name=user_in.guesthouse_name,
             hashed_password=hashed_pwd,
             is_active=True,
             is_superuser=False

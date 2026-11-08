@@ -1,4 +1,5 @@
 from datetime import date
+import re
 from typing import Literal
 
 from fastapi import APIRouter, Depends
@@ -21,7 +22,7 @@ def get_report(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return build_report(db, period, reference_date or date.today())
+    return build_report(db, period, reference_date or date.today(), current_user.id)
 
 
 @router.get("/pdf")
@@ -32,10 +33,12 @@ def download_report_pdf(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    report = build_report(db, period, reference_date or date.today())
-    filename = f"nginap-ripoti-{report.period}-{report.date_from.isoformat()}.pdf"
+    report = build_report(db, period, reference_date or date.today(), current_user.id)
+    guesthouse_name = getattr(current_user, "guesthouse_name", None) or current_user.full_name
+    filename_prefix = re.sub(r"[^a-zA-Z0-9]+", "-", guesthouse_name).strip("-").lower()
+    filename = f"{filename_prefix or 'guest-house'}-ripoti-{report.period}-{report.date_from.isoformat()}.pdf"
     return Response(
-        content=build_pdf(report, language),
+        content=build_pdf(report, language, guesthouse_name),
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

@@ -1,1 +1,8 @@
-Generic single-database configuration.
+# Database migrations
+
+Configure `DATABASE_URL` for the target database, then run `alembic upgrade head`
+from the `backend` directory before starting the application. The tenant-isolation
+migration scopes room numbers and guest phone/ID uniqueness to each account and
+keeps existing records.
+
+Back up production databases before applying schema migrations.

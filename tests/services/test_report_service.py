@@ -55,12 +55,15 @@ def test_pdf_report_is_valid_and_splits_long_reports_across_pages():
         bookings=bookings,
     )
 
-    pdf = build_pdf(report)
-    english_pdf = build_pdf(report, "en")
+    pdf = build_pdf(report, guesthouse_name="Sunset Guest House")
+    english_pdf = build_pdf(report, "en", "Sunset Guest House")
 
     assert pdf.startswith(b"%PDF-1.4")
     assert b"/Count 2" in pdf
     assert b"%%EOF" in pdf
     assert b"MUHTASARI" in pdf
-    assert b"GUEST HOUSE REPORT" in english_pdf
+    assert b"Sunset Guest House" in pdf
+    assert b"NGINAP" not in pdf
+    assert b"Sunset Guest House" in english_pdf
+    assert b"NGINAP" not in english_pdf
     assert b"SUMMARY" in english_pdf

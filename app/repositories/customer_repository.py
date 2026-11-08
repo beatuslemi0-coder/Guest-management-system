@@ -6,19 +6,39 @@ from app.schemas.customer import CustomerCreate, CustomerUpdate
 
 class CustomerRepository:
     @staticmethod
-    def get_by_id(db: Session, customer_id: int) -> Optional[Customer]:
-        return db.query(Customer).filter(Customer.id == customer_id).first()
+    def get_by_id(db: Session, customer_id: int, user_id: int) -> Optional[Customer]:
+        return db.query(Customer).filter(Customer.id == customer_id, Customer.user_id == user_id).first()
 
     @staticmethod
-    def get_by_phone(db: Session, phone_number: str) -> Optional[Customer]:
-        return db.query(Customer).filter(Customer.phone_number == phone_number).first()
+    def get_by_phone(
+        db: Session,
+        phone_number: str,
+        user_id: int,
+        exclude_customer_id: Optional[int] = None,
+    ) -> Optional[Customer]:
+        query = db.query(Customer).filter(Customer.phone_number == phone_number, Customer.user_id == user_id)
+        if exclude_customer_id is not None:
+            query = query.filter(Customer.id != exclude_customer_id)
+        return query.first()
 
     @staticmethod
-    def get_all(db: Session, skip: int = 0, limit: int = 100):
-        return db.query(Customer).offset(skip).limit(limit).all()
+    def get_by_id_number(
+        db: Session,
+        id_number: str,
+        user_id: int,
+        exclude_customer_id: Optional[int] = None,
+    ) -> Optional[Customer]:
+        query = db.query(Customer).filter(Customer.id_number == id_number, Customer.user_id == user_id)
+        if exclude_customer_id is not None:
+            query = query.filter(Customer.id != exclude_customer_id)
+        return query.first()
 
     @staticmethod
-    def create(db: Session, customer_in: CustomerCreate) -> Customer:
+    def get_all_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+        return db.query(Customer).filter(Customer.user_id == user_id).offset(skip).limit(limit).all()
+
+    @staticmethod
+    def create(db: Session, customer_in: CustomerCreate, user_id: int) -> Customer:
         db_customer = Customer(
             full_name=customer_in.full_name,
             phone_number=customer_in.phone_number,
@@ -27,6 +47,7 @@ class CustomerRepository:
             origin=customer_in.origin,
             destination=customer_in.destination,
             occupation=customer_in.occupation,
+            user_id=user_id,
         )
         db.add(db_customer)
         db.commit()

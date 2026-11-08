@@ -5,25 +5,26 @@ from app.schemas.room import RoomCreate, RoomUpdate
 
 class RoomRepository:
     @staticmethod
-    def get_by_id(db: Session, room_id: int):
-        return db.query(Room).filter(Room.id == room_id).first()
+    def get_by_id(db: Session, room_id: int, user_id: int):
+        return db.query(Room).filter(Room.id == room_id, Room.user_id == user_id).first()
 
     @staticmethod
-    def get_by_number(db: Session, room_number: str):
-        return db.query(Room).filter(Room.room_number == room_number).first()
+    def get_by_number(db: Session, room_number: str, user_id: int):
+        return db.query(Room).filter(Room.room_number == room_number, Room.user_id == user_id).first()
 
     @staticmethod
-    def get_all(db: Session, skip: int = 0, limit: int = 100):
-        return db.query(Room).offset(skip).limit(limit).all()
+    def get_all_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+        return db.query(Room).filter(Room.user_id == user_id).offset(skip).limit(limit).all()
 
     @staticmethod
-    def create(db: Session, room_in: RoomCreate):
+    def create(db: Session, room_in: RoomCreate, user_id: int):
         db_room = Room(
             room_number=room_in.room_number,
             room_type=room_in.room_type,
             price_per_night=room_in.price_per_night,
             description=room_in.description,
-            is_available=True  # Kikiundwa kwa mara ya kwanza kinakuwa wazi
+            is_available=True, # Kikiundwa kwa mara ya kwanza kinakuwa wazi
+            user_id=user_id
         )
         db.add(db_room)
         db.commit()

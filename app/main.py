@@ -11,6 +11,8 @@ from app.api.v1.rooms import router as rooms_router
 from app.api.v1.customers import router as customers_router
 from app.api.v1.bookings import router as bookings_router
 from app.api.v1.reports import router as reports_router
+from app.api.v1.users import admin_router as admin_router
+from app.api.v1.users import router as admin_users_router
 
 # Hii itatengeneza meza kwenye Database moja kwa moja kwa kuanzia 
 # (Baadae tutaanza kutumia Alembic kwa ajili ya migrations kamili)
@@ -34,6 +36,8 @@ app.include_router(rooms_router, prefix=settings.API_V1_STR)
 app.include_router(customers_router, prefix=settings.API_V1_STR)
 app.include_router(bookings_router, prefix=settings.API_V1_STR)
 app.include_router(reports_router, prefix=settings.API_V1_STR)
+app.include_router(admin_users_router, prefix=settings.API_V1_STR)
+app.include_router(admin_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():

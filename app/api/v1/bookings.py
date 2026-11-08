@@ -17,7 +17,11 @@ def create_booking(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        return BookingRepository.create(db=db, booking_in=booking_in)
+        return BookingRepository.create(
+            db=db,
+            booking_in=booking_in,
+            user_id=current_user.id,
+        )
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -31,7 +35,12 @@ def list_bookings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return BookingRepository.get_all(db=db, skip=skip, limit=limit)
+    return BookingRepository.get_all(
+        db=db,
+        user_id=current_user.id,
+        skip=skip,
+        limit=limit,
+    )
 
 @router.post("/{booking_id}/checkout", response_model=BookingResponse)
 def checkout_booking(
@@ -40,7 +49,11 @@ def checkout_booking(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        return BookingRepository.checkout(db=db, booking_id=booking_id)
+        return BookingRepository.checkout(
+            db=db,
+            booking_id=booking_id,
+            user_id=current_user.id,
+        )
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -4,6 +4,8 @@ from datetime import date, datetime, time, timedelta
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.booking import Booking
+from app.models.customer import Customer
+from app.models.room import Room
 from app.schemas.report import ReportBooking, ReportPeriod, ReportResponse, ReportSeriesPoint, ReportSummary
 
 
@@ -33,12 +35,21 @@ def _series_dates(period: ReportPeriod, start: date, end: date) -> list[date]:
     return [start + timedelta(days=offset) for offset in range((end - start).days)]
 
 
-def build_report(db: Session, period: ReportPeriod, reference_date: date) -> ReportResponse:
+def build_report(
+    db: Session,
+    period: ReportPeriod,
+    reference_date: date,
+    user_id: int,
+) -> ReportResponse:
     start, end = get_period_range(period, reference_date)
     bookings = (
         db.query(Booking)
+        .join(Room, Booking.room_id == Room.id)
+        .join(Customer, Booking.customer_id == Customer.id)
         .options(joinedload(Booking.room), joinedload(Booking.customer))
         .filter(
+            Room.user_id == user_id,
+            Customer.user_id == user_id,
             Booking.check_in_date >= datetime.combine(start, time.min),
             Booking.check_in_date < datetime.combine(end, time.min),
         )
@@ -116,7 +127,11 @@ def _draw_text(x: int, y: int, size: int, value: object, color: str = "0.15 0.23
     return f"BT /F1 {size} Tf {color} rg {x} {y} Td ({_pdf_text(value)}) Tj ET\n"
 
 
-def build_pdf(report: ReportResponse, language: str = "sw") -> bytes:
+def build_pdf(
+    report: ReportResponse,
+    language: str = "sw",
+    guesthouse_name: str = "Guest House",
+) -> bytes:
     rows_per_page = 27
     pages = [report.bookings[index:index + rows_per_page] for index in range(0, len(report.bookings), rows_per_page)]
     if not pages:
@@ -141,9 +156,10 @@ def build_pdf(report: ReportResponse, language: str = "sw") -> bytes:
 
     for page_number, page_rows in enumerate(pages, start=1):
         content = ["q\n0.08 0.48 0.42 rg\n0 770 595 72 re f\nQ\n"]
-        title = "NGINAP  |  GUEST HOUSE REPORT" if language == "en" else "NGINAP  |  RIPOTI YA MALAZI"
-        content.append(_draw_text(38, 805, 20, title, "1 1 1"))
-        content.append(_draw_text(38, 785, 10, f"{period_names[report.period]}: {report.date_from.isoformat()} hadi {report.date_to.isoformat()}", "0.88 0.96 0.94"))
+        report_title = "GUEST HOUSE REPORT" if language == "en" else "RIPOTI YA MALAZI"
+        content.append(_draw_text(38, 817, 16, guesthouse_name[:55], "1 1 1"))
+        content.append(_draw_text(38, 798, 10, report_title, "0.88 0.96 0.94"))
+        content.append(_draw_text(38, 781, 9, f"{period_names[report.period]}: {report.date_from.isoformat()} hadi {report.date_to.isoformat()}", "0.88 0.96 0.94"))
 
         if page_number == 1:
             if language == "en":
@@ -187,7 +203,7 @@ def build_pdf(report: ReportResponse, language: str = "sw") -> bytes:
         if not report.bookings and page_number == 1:
             empty_message = "No bookings in this period." if language == "en" else "Hakuna booking katika kipindi hiki."
             content.append(_draw_text(39, y, 10, empty_message))
-        footer = f"Nginap  |  Page {page_number} of {len(pages)}" if language == "en" else f"Nginap  |  Ukurasa {page_number} kati ya {len(pages)}"
+        footer = f"{guesthouse_name[:40]}  |  Page {page_number} of {len(pages)}" if language == "en" else f"{guesthouse_name[:40]}  |  Ukurasa {page_number} kati ya {len(pages)}"
         content.append(_draw_text(38, 25, 8, footer, "0.48 0.55 0.55"))
         page_streams.append("".join(content).encode("latin-1"))
 

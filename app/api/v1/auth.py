@@ -3,13 +3,47 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.schemas.user import UserCreate, UserResponse, Token
+from app.schemas.user import GuestHouseNameUpdate, UserCreate, UserResponse, Token
 from app.repositories.user_repository import UserRepository
 from app.core.security import verify_password, create_access_token
 from app.schemas.user import ForgotPassword, ResetPassword
 from app.core.security import create_password_reset_token, verify_password_reset_token
+from app.api.dependencies import get_current_user
+from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+@router.get("/me", response_model=UserResponse)
+def get_current_user_profile(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.put("/me/guesthouse-name", response_model=UserResponse)
+def update_guesthouse_name(
+    name_in: GuestHouseNameUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    guesthouse_name = " ".join(name_in.guesthouse_name.split())
+    if not guesthouse_name:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Weka jina la guest house.",
+        )
+
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Mtumiaji hakupatikana!",
+        )
+    user.guesthouse_name = guesthouse_name
+    current_user.guesthouse_name = guesthouse_name
+    db.commit()
+    db.refresh(user)
+    return user
+
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
