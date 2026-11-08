@@ -11,7 +11,15 @@ async function apiRequest(path, options = {}) {
         headers.set('Content-Type', 'application/json');
     }
 
-    const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+    let response;
+    try {
+        response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+    } catch (error) {
+        if (error instanceof TypeError) {
+            throw new Error(`Imeshindikana kuwasiliana na backend (${API_BASE_URL}). Hakikisha seva inaendelea kufanya kazi na ruhusu CORS kwa frontend.`);
+        }
+        throw error;
+    }
     const contentType = response.headers.get('content-type') || '';
     const data = contentType.includes('application/json') ? await response.json() : null;
 

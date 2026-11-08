@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Usimamizi wa Guest House - Nginap</title>
+    <title>Usimamizi wa Guest House</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dashboard-body">
     <div class="app-layout">
         <aside class="sidebar">
             <div class="sidebar-top">
-                <a class="sidebar-brand" href="#overview"><span class="brand-mark" data-brand-mark>N</span><span><span data-brand-name>nginap</span><small data-brand-category>GUEST HOUSE</small></span></a>
+                <a class="sidebar-brand" href="#overview"><span class="brand-mark" data-brand-mark>G</span><span><span data-brand-name>Guest House</span><small data-brand-category>GUEST HOUSE</small></span></a>
                 <div class="sidebar-controls">
                     <button class="brand-edit-button" type="button" data-open-brand-dialog aria-label="Badilisha jina la guest house" title="Badilisha jina la guest house">✎</button>
                     <label class="language-switcher"><span aria-hidden="true">◎</span><select data-language-switch aria-label="Chagua lugha"><option value="sw">Kiswahili</option><option value="en">English</option></select></label>
@@ -26,6 +26,7 @@
                 <a class="nav-link" href="#rooms" data-view="rooms"><span>▤</span> Vyumba</a>
                 <a class="nav-link" href="#guests" data-view="guests"><span>♙</span> Wageni</a>
                 <a class="nav-link" href="#reports" data-view="reports"><span>▥</span> Ripoti</a>
+                <a id="admin-nav-link" class="nav-link" href="#admin" data-view="admin" hidden><span>♙</span> Admin</a>
             </nav>
             <div class="sidebar-bottom">
                 <div class="sidebar-help"><span>✦</span><strong>Usimamizi rahisi,<br>ukarimu bora.</strong></div>
@@ -35,7 +36,7 @@
 
         <main class="main-content">
             <header class="top-navbar">
-                <div class="mobile-brand"><span data-brand-name>nginap</span><span>.</span></div>
+                <div class="mobile-brand"><span data-brand-name>Guest House</span></div>
                 <div class="welcome-copy"><span id="greeting">Hujambo 👋</span><small>Huu hapa muhtasari wa guest house yako.</small></div>
                 <div class="user-profile"><div class="avatar">N</div><div class="user-info"><strong>Msimamizi</strong><small>Usimamizi</small></div></div>
             </header>
@@ -124,7 +125,27 @@
                 <div id="report-bookings" class="data-card table-card"></div>
             </section>
 
-            <footer class="app-footer"><span>nginap.</span> Mfumo wa usimamizi wa malazi <span id="footer-date"></span></footer>
+            <section class="view-panel" id="view-admin">
+                <div class="page-heading">
+                    <div><span class="eyebrow">SUPER ADMIN</span><h1>Muhtasari wa nyumba</h1><p>Angalia nyumba za wageni, idadi ya vyumba na shughuli za leo.</p></div>
+                </div>
+                <div class="dashboard-summary admin-summary admin-house-summary">
+                    <article class="summary-card"><div class="stat-icon violet">⌂</div><div><span>Nyumba za wageni</span><strong id="admin-house-count">—</strong></div><small>Biashara zilizosajiliwa</small></article>
+                    <article class="summary-card"><div class="stat-icon teal">▤</div><div><span>Vyumba vyote</span><strong id="admin-room-count">—</strong></div><small>Katika nyumba zote</small></article>
+                    <article class="summary-card"><div class="stat-icon green">↗</div><div><span>Booking za kuingia leo</span><strong id="admin-check-in-count">—</strong></div><small>Hazijaghairiwa</small></article>
+                    <article class="summary-card"><div class="stat-icon amber">↙</div><div><span>Booking za kutoka leo</span><strong id="admin-check-out-count">—</strong></div><small>Hazijaghairiwa</small></article>
+                </div>
+                <div id="admin-house-message" class="dashboard-message report-message" role="status" aria-live="polite" hidden></div>
+                <div class="section-heading"><div><h2>Nyumba na shughuli za kila siku</h2><p id="admin-house-page-range">Inapakia taarifa.</p></div></div>
+                <div id="admin-guest-houses-table" class="data-card table-card"></div>
+                <div class="admin-pagination">
+                    <button id="admin-house-previous" class="filter-btn" type="button" disabled>Nyuma</button>
+                    <span id="admin-house-page-label"></span>
+                    <button id="admin-house-next" class="filter-btn" type="button" disabled>Zaidi</button>
+                </div>
+            </section>
+
+            <footer class="app-footer"><span data-brand-name>Guest House</span> · Mfumo wa usimamizi wa malazi <span id="footer-date"></span></footer>
         </main>
     </div>
 
@@ -148,7 +169,7 @@
     <script>
         if (!localStorage.getItem('token')) window.location.replace('index.html');
 
-        const state = { rooms: [], bookings: [], guests: [] };
+        const state = { rooms: [], bookings: [], guests: [], currentUser: null, adminHouseSkip: 0 };
         const dialog = document.getElementById('record-dialog');
         const recordForm = document.getElementById('record-form');
         const messageBox = document.getElementById('dashboard-message');
@@ -314,6 +335,51 @@
                 report.bookings.map((booking) => `<tr><td>${date(booking.check_in_date)}<small class="cell-subtitle">Hadi ${date(booking.check_out_date)}</small></td><td><strong>${escapeHtml(booking.guest_name)}</strong></td><td>${escapeHtml(booking.guest_phone)}</td><td>${escapeHtml(booking.room_number)}<small class="cell-subtitle">${escapeHtml(booking.room_type)}</small></td><td>${statusBadge(booking.status)}</td><td>${money(booking.total_price)}</td></tr>`),
                 'Hakuna booking katika kipindi hiki.'
             );
+        }
+
+        function renderAdminGuestHouses(page) {
+            state.adminHouseSkip = page.skip;
+            document.getElementById('admin-house-count').textContent = page.summary.guesthouse_count.toLocaleString();
+            document.getElementById('admin-room-count').textContent = page.summary.room_count.toLocaleString();
+            document.getElementById('admin-check-in-count').textContent = page.summary.check_ins_today.toLocaleString();
+            document.getElementById('admin-check-out-count').textContent = page.summary.check_outs_today.toLocaleString();
+
+            const first = page.total ? page.skip + 1 : 0;
+            const last = Math.min(page.skip + page.guest_houses.length, page.total);
+            document.getElementById('admin-house-page-range').textContent = `${first}–${last} / ${page.total}`;
+            const pageNumber = Math.floor(page.skip / page.limit) + 1;
+            const pageCount = Math.max(1, Math.ceil(page.total / page.limit));
+            document.getElementById('admin-house-page-label').textContent = `${pageNumber} / ${pageCount}`;
+            document.getElementById('admin-house-previous').disabled = page.skip === 0;
+            document.getElementById('admin-house-next').disabled = page.skip + page.limit >= page.total;
+
+            document.getElementById('admin-guest-houses-table').innerHTML = tableMarkup(
+                ['NYUMBA YA WAGENI', 'MSIMAMIZI', 'VYUMBA', 'WALIOINGIA LEO', 'WANAOTOKA LEO'],
+                page.guest_houses.map((house) => `
+                    <tr>
+                        <td><strong>${escapeHtml(house.guesthouse_name)}</strong><small class="cell-subtitle">${escapeHtml(house.owner_email)}</small></td>
+                        <td>${escapeHtml(house.owner_name)}</td>
+                        <td><strong>${house.room_count}</strong><small class="cell-subtitle">${house.occupied_room_count} vimechukuliwa · ${house.available_room_count} wazi</small></td>
+                        <td>${house.check_ins_today}</td>
+                        <td>${house.check_outs_today}</td>
+                    </tr>
+                `),
+                'Hakuna nyumba za wageni zilizosajiliwa.'
+            );
+        }
+
+        async function loadAdminGuestHouses(skip = 0) {
+            const message = document.getElementById('admin-house-message');
+            message.hidden = true;
+            message.classList.remove('error');
+            try {
+                const page = await apiRequest(`/admin/guest-houses/?skip=${skip}&limit=100`);
+                renderAdminGuestHouses(page);
+            } catch (error) {
+                message.textContent = error.message;
+                message.classList.add('error');
+                message.hidden = false;
+            }
         }
 
         async function loadReport() {
@@ -527,6 +593,9 @@
         document.querySelectorAll('.nav-link').forEach((link) => link.addEventListener('click', () => {
             showView(link.dataset.view);
             if (link.dataset.view === 'reports') loadReport();
+            if (link.dataset.view === 'admin') {
+                loadAdminGuestHouses(state.adminHouseSkip);
+            }
         }));
         document.querySelectorAll('[data-navigate]').forEach((button) => button.addEventListener('click', () => {
             showView(button.dataset.navigate);
@@ -566,7 +635,8 @@
             button.disabled = true;
             button.textContent = 'Inatengeneza PDF...';
             try {
-                const filename = `nginap-ripoti-${period}-${currentReport.date_from}.pdf`;
+                const houseSlug = (window.getGuestHouseName() || 'guest-house').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+                const filename = `${houseSlug || 'guest-house'}-ripoti-${period}-${currentReport.date_from}.pdf`;
                 await apiDownload(`/reports/pdf?period=${encodeURIComponent(period)}&reference_date=${encodeURIComponent(referenceDate)}&language=${encodeURIComponent(window.getAppLanguage())}`, filename);
             } catch (error) {
                 notify(error.message, true);
@@ -579,6 +649,8 @@
         document.addEventListener('click', (event) => {
             const target = event.target.closest('button');
             if (!target) return;
+            if (target.id === 'admin-house-previous') loadAdminGuestHouses(Math.max(0, state.adminHouseSkip - 100));
+            if (target.id === 'admin-house-next') loadAdminGuestHouses(state.adminHouseSkip + 100);
             if (target.dataset.checkout) checkout(Number(target.dataset.checkout));
             if (target.dataset.viewRoom) viewRecord('room', Number(target.dataset.viewRoom));
             if (target.dataset.viewGuest) viewRecord('guest', Number(target.dataset.viewGuest));
@@ -596,14 +668,35 @@
         const hour = new Date().getHours();
         document.getElementById('greeting').textContent = `${hour < 12 ? 'Habari za asubuhi' : hour < 18 ? 'Habari za mchana' : 'Habari za jioni'} 👋`;
         document.getElementById('footer-date').textContent = new Date().toLocaleDateString(window.getAppLanguage() === 'en' ? 'en-TZ' : 'sw-TZ', { day: 'numeric', month: 'long', year: 'numeric' });
-        const initialView = location.hash.slice(1);
-        const allowedViews = ['overview', 'bookings', 'rooms', 'guests', 'reports'];
-        const selectedView = allowedViews.includes(initialView) ? initialView : 'overview';
-        showView(selectedView);
         const localToday = new Date();
         document.getElementById('report-date').value = new Date(localToday.getTime() - localToday.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-        loadData();
-        if (selectedView === 'reports') loadReport();
+        async function initializeDashboard() {
+            try {
+                state.currentUser = await apiRequest('/auth/me');
+                window.setGuestHouseName(state.currentUser.guesthouse_name || state.currentUser.full_name);
+                if (state.currentUser.is_superuser) {
+                    document.getElementById('admin-nav-link').hidden = false;
+                    document.querySelector('.user-info strong').textContent = 'Super Admin';
+                    document.querySelector('.user-info small').textContent = state.currentUser.email;
+                } else {
+                    document.querySelector('.user-info strong').textContent = state.currentUser.full_name;
+                    document.querySelector('.user-info small').textContent = state.currentUser.email;
+                }
+                const initialView = location.hash.slice(1);
+                const allowedViews = ['overview', 'bookings', 'rooms', 'guests', 'reports'];
+                if (state.currentUser.is_superuser) allowedViews.push('admin');
+                const selectedView = allowedViews.includes(initialView) ? initialView : 'overview';
+                showView(selectedView);
+                await loadData();
+                if (selectedView === 'reports') loadReport();
+                if (selectedView === 'admin') {
+                    loadAdminGuestHouses();
+                }
+            } catch (error) {
+                notify(error.message, true);
+            }
+        }
+        initializeDashboard();
     </script>
 </body>
 </html>

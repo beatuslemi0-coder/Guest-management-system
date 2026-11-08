@@ -1,17 +1,17 @@
 (function () {
-    const storageKey = 'nginap-guest-house-name';
-    const defaultName = 'nginap';
+    let guestHouseName = 'Guest House';
 
     function currentName() {
-        return localStorage.getItem(storageKey) || defaultName;
+        return guestHouseName;
     }
 
     function updateBrand(name) {
+        guestHouseName = name || 'Guest House';
         document.querySelectorAll('[data-brand-name]').forEach((element) => {
-            element.textContent = name;
+            element.textContent = guestHouseName;
         });
         document.querySelectorAll('[data-brand-mark]').forEach((element) => {
-            element.textContent = name.charAt(0).toUpperCase();
+            element.textContent = guestHouseName.charAt(0).toUpperCase();
         });
         document.querySelectorAll('[data-open-brand-dialog]').forEach((button) => {
             button.title = window.getAppLanguage?.() === 'en' ? 'Edit guest house name' : 'Badilisha jina la guest house';
@@ -30,10 +30,11 @@
         input.select();
     }
 
-    function saveBrandName(event) {
+    async function saveBrandName(event) {
         event.preventDefault();
         const input = document.getElementById('brand-name-input');
         const message = document.getElementById('brand-name-message');
+        const saveButton = document.querySelector('[data-brand-save]');
         const name = input.value.trim().replace(/\s+/g, ' ');
         if (!name) {
             message.textContent = window.getAppLanguage?.() === 'en'
@@ -51,9 +52,20 @@
             return;
         }
 
-        localStorage.setItem(storageKey, name);
-        updateBrand(name);
-        document.getElementById('brand-dialog').close();
+        saveButton.disabled = true;
+        message.textContent = '';
+        try {
+            const user = await apiRequest('/auth/me/guesthouse-name', {
+                method: 'PUT',
+                body: JSON.stringify({ guesthouse_name: name })
+            });
+            updateBrand(user.guesthouse_name);
+            document.getElementById('brand-dialog').close();
+        } catch (error) {
+            message.textContent = error.message;
+        } finally {
+            saveButton.disabled = false;
+        }
     }
 
     document.body.insertAdjacentHTML('beforeend', `
@@ -63,7 +75,7 @@
                     <div>
                         <span class="eyebrow">TAARIFA ZA GUEST HOUSE</span>
                         <h2 data-brand-dialog-title>Badilisha jina la guest house</h2>
-                        <p data-brand-dialog-description>Jina hili litaonekana juu kushoto na litahifadhiwa kwenye kifaa hiki.</p>
+                        <p data-brand-dialog-description>Jina hili litaonekana kwenye mfumo na ripoti zako.</p>
                     </div>
                     <button class="dialog-close" type="button" data-close-brand-dialog aria-label="Funga">×</button>
                 </div>
@@ -88,7 +100,6 @@
     });
     document.getElementById('brand-name-form').addEventListener('submit', saveBrandName);
     updateBrand(currentName());
-    window.addEventListener('storage', (event) => {
-        if (event.key === storageKey) updateBrand(currentName());
-    });
+    window.setGuestHouseName = updateBrand;
+    window.getGuestHouseName = currentName;
 })();
